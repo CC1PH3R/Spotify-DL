@@ -9,6 +9,7 @@ dotenv==0.9.9
 frozenlist==1.6.0
 idna==3.10
 multidict==6.4.4
+mutagen==1.47.0
 propcache==0.3.1
 python-dotenv==1.1.0
 redis==6.1.0
@@ -16,4 +17,4 @@ requests==2.32.3
 spotipy==2.25.1
 urllib3==2.4.0
 yarl==1.20.0
-yt-dlp==2025.4.30
+yt-dlp==2025.5.22

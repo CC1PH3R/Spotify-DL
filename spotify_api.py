@@ -19,14 +19,14 @@ auth_manager = SpotifyClientCredentials(
 )
 sp = Spotify(auth_manager=auth_manager)
 
-def fetech_track_info(spotify_url: str) -> dict:
+def fetch_track_info(spotify_url: str) -> dict:
     """ Given a Spotify URL, return key metatdata. """
     track = sp.track(spotify_url)
     return {
         'title': track['name'],
         'artists': [artist['name'] for artist in track['artists']],
         'album': track['album']['name'],
-        'cover': track['album']['images'][0]['url']
+        'cover_url': track['album']['images'][0]['url']
     }
 
 if __name__ == "__main__":
@@ -36,10 +36,8 @@ if __name__ == "__main__":
         sys.exit(1)
 
     url = sys.argv[1]
-    info = fetech_track_info(url)
+    info = fetch_track_info(url)
     print(f"Title: {info['title']}")
     print(f"Artists: {', '.join(info['artists'])}")
     print(f"Album: {info['album']}")
     print(f"Cover: {info['cover']}")
-
-
