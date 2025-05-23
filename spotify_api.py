@@ -19,25 +19,37 @@ auth_manager = SpotifyClientCredentials(
 )
 sp = Spotify(auth_manager=auth_manager)
 
-def fetch_track_info(spotify_url: str) -> dict:
-    """ Given a Spotify URL, return key metatdata. """
-    track = sp.track(spotify_url)
+
+def search_track (query: str) -> dict:
+    """ Search for a track on Spotify and return its metadata. """
+    results = sp.search(q=query, type='track', limit=1)
+
+    if not results['tracks']['items']:
+        raise Exception(f"No results found for your '{query}'")
+    
+    track = results['tracks']['items'][0]
+
+    # Get the best quality album cover
+    cover_url = None
+    if track['album']['images']:
+        cover_url = track['album']['images'][0]['url']
+
     return {
         'title': track['name'],
         'artists': [artist['name'] for artist in track['artists']],
         'album': track['album']['name'],
-        'cover_url': track['album']['images'][0]['url']
+        'cover_url': cover_url
     }
 
 if __name__ == "__main__":
     import sys
     if len(sys.argv) != 2:
-        print("Usage: python spotify_api.py <spotify_url>")
+        print("Usage: python spotify_api.py <song name>")
         sys.exit(1)
 
-    url = sys.argv[1]
-    info = fetch_track_info(url)
+    query = sys.argv[1]
+    info = search_track(query)
     print(f"Title: {info['title']}")
     print(f"Artists: {', '.join(info['artists'])}")
     print(f"Album: {info['album']}")
-    print(f"Cover: {info['cover']}")
+    print(f"Cover: {info['cover_url']}")

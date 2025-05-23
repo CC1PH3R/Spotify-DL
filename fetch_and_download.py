@@ -1,43 +1,58 @@
-from spotify_api import fetch_track_info
+from spotify_api import search_track
 from youtube_downloader import download_audio
 from tagger import embed_metadata
 import sys
-import glob
 import os
+import re
+
+def safe_filename(name: str) -> str:
+    """
+    Sanitize the filename by replacing invalid characters.
+    """
+    # Replace invalid characters with underscores
+    return re.sub(r'[\\/*?:"<>|]', "_", name)
 
 if __name__ == "__main__":
     if len(sys.argv) !=2:
-        print("Usage: python fetch_and_download.py <spotify_track_url>")
+        print("Usage: python fetch_and_download.py '<song name>'")
         sys.exit(1)
 
-    spotify_url = sys.argv[1]
-    metadata = fetch_track_info(spotify_url)
+    query = sys.argv[1]
 
+    # Get metadata from Spotify
+    metadata = search_track(query)
     title = metadata["title"]
     artists = metadata["artists"]
-    search_query = f"{artists[0]} - {title}"
+    album = metadata["album"]
+    cover_url = metadata["cover_url"]
 
     print(f"🎵 Track: {title}")
     print(f"🎤 Artist: {artists[0]}")
-    print(f"🔍 Searching YouTube for: {search_query}")
+    print(f"💿 Album: {album}")
 
-    download_audio(search_query)
-    print("✅ Download complete.")
+    # Create search query and safe filename
+    search_query = f"{artists[0]} - {title}"
+    safe_name = safe_filename(f"{artists[0]} - {title}")
 
-# Find the most recent MP3 in downloads/
-downloaded_files = sorted(glob.glob("downloads/*.mp3"), key=os.path.getmtime, reverse=True)
+    # Create download directory if it doesn't exist
+    os.makedirs("downloads", exist_ok=True)
 
-if downloaded_files:
-    mp3_file = downloaded_files[0]
-    print(f"📥 Found downloaded file: {mp3_file}")
-    embed_metadata( 
-        mp3_file,
-        title=metadata["title"],
-        artists=metadata["artists"],
-        album=metadata["album"],
-        cover_url=metadata["cover_url"]
-    )
-else:
-    print("❌ No downloaded MP3 files found in downloads/")
-    sys.exit(1)
-print("✅ Metadata embedded successfully.") 
+    # Download the audio from YouTube
+    print(f"🔍 Downloading: {search_query}")
+    try:
+        downloaded_file = download_audio(search_query, safe_name)
+        print(f"✅ Downloaded: {downloaded_file}")
+        
+        # Embed metadata
+        embed_metadata(
+            file_path=downloaded_file,
+            title=title,
+            artists=artists,
+            album=album,
+            cover_url=cover_url
+        )
+        print(f"✅ Metadata embedded successfully.")
+        
+    except Exception as e:
+        print(f"❌ Error during download: {e}")
+        sys.exit(1)
